@@ -32,14 +32,14 @@ def get_args():
 class SegmentPeople(pl.LightningModule):
     def __init__(self, hparams):
         super().__init__()
-        self.hparams = hparams
+        self.hparamsa = hparams
 
-        self.model = object_from_dict(self.hparams["model"])
-        if "resume_from_checkpoint" in self.hparams:
+        self.model = object_from_dict(self.hparamsa["model"])
+        if "resume_from_checkpoint" in self.hparamsa:
             corrections: Dict[str, str] = {"model.": ""}
 
             state_dict = state_dict_from_disk(
-                file_path=self.hparams["resume_from_checkpoint"],
+                file_path=self.hparamsa["resume_from_checkpoint"],
                 rename_in_layers=corrections,
             )
             self.model.load_state_dict(state_dict)
@@ -55,7 +55,7 @@ class SegmentPeople(pl.LightningModule):
     def setup(self, stage=0):
         samples = get_samples(image_path, mask_path)
 
-        num_train = int((1 - self.hparams["val_split"]) * len(samples))
+        num_train = int((1 - self.hparamsa["val_split"]) * len(samples))
 
         self.train_samples = samples[:num_train]
         self.val_samples = samples[num_train:]
@@ -64,17 +64,17 @@ class SegmentPeople(pl.LightningModule):
         print("Len val samples = ", len(self.val_samples))
 
     def train_dataloader(self):
-        train_aug = from_dict(self.hparams["train_aug"])
+        train_aug = from_dict(self.hparamsa["train_aug"])
 
-        if "epoch_length" not in self.hparams["train_parameters"]:
+        if "epoch_length" not in self.hparamsa["train_parameters"]:
             epoch_length = None
         else:
-            epoch_length = self.hparams["train_parameters"]["epoch_length"]
+            epoch_length = self.hparamsa["train_parameters"]["epoch_length"]
 
         result = DataLoader(
             SegmentationDataset(self.train_samples, train_aug, epoch_length),
-            batch_size=self.hparams["train_parameters"]["batch_size"],
-            num_workers=self.hparams["num_workers"],
+            batch_size=self.hparamsa["train_parameters"]["batch_size"],
+            num_workers=self.hparamsa["num_workers"],
             shuffle=True,
             pin_memory=True,
             drop_last=True,
@@ -84,12 +84,12 @@ class SegmentPeople(pl.LightningModule):
         return result
 
     def val_dataloader(self):
-        val_aug = from_dict(self.hparams["val_aug"])
+        val_aug = from_dict(self.hparamsa["val_aug"])
 
         result = DataLoader(
             SegmentationDataset(self.val_samples, val_aug, length=None),
-            batch_size=self.hparams["val_parameters"]["batch_size"],
-            num_workers=self.hparams["num_workers"],
+            batch_size=self.hparamsa["val_parameters"]["batch_size"],
+            num_workers=self.hparamsa["num_workers"],
             shuffle=False,
             pin_memory=True,
             drop_last=False,
@@ -100,12 +100,13 @@ class SegmentPeople(pl.LightningModule):
         return result
 
     def configure_optimizers(self):
+        print("Model parameters",self.hparamsa["optimizer"])
         optimizer = object_from_dict(
-            self.hparams["optimizer"],
+            self.hparamsa["optimizer"],
             params=[x for x in self.model.parameters() if x.requires_grad],
         )
 
-        scheduler = object_from_dict(self.hparams["scheduler"], optimizer=optimizer)
+        scheduler = object_from_dict(self.hparamsa["scheduler"], optimizer=optimizer)
         self.optimizers = [optimizer]
 
         return self.optimizers, [scheduler]
@@ -165,7 +166,7 @@ def main():
 
     pipeline = SegmentPeople(hparams)
 
-    Path(hparams["checkpoint_callback"]["filepath"]).mkdir(exist_ok=True, parents=True)
+    Path(hparams["checkpoint_callback"]["dirpath"]).mkdir(exist_ok=True, parents=True)
 
     trainer = object_from_dict(
         hparams["trainer"],
