@@ -5,6 +5,11 @@ __pycache__/
 
 # C extensions
 *.so
+*.csv
+*.zip
+imaterialist-fashion-2019-FGVC6/*
+label_descriptions.json
+
 
 # Distribution / packaging
 .Python
