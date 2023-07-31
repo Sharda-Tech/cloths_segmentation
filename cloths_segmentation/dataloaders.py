@@ -5,7 +5,7 @@ import albumentations as albu
 import numpy as np
 import torch
 from iglovikov_helper_functions.utils.image_utils import load_rgb, load_grayscale
-from pytorch_toolbelt.utils.torch_utils import tensor_from_rgb_image
+from pytorch_toolbelt.utils.torch_utils import image_to_tensor
 from torch.utils.data import Dataset
 
 
@@ -45,6 +45,6 @@ class SegmentationDataset(Dataset):
 
         return {
             "image_id": image_path.stem,
-            "features": tensor_from_rgb_image(image),
+            "features": image_to_tensor(image),
             "masks": torch.unsqueeze(mask, 0).float(),
         }

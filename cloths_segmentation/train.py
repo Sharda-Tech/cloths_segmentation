@@ -148,14 +148,9 @@ class SegmentPeople(pl.LightningModule):
 
         return result
 
-    def validation_epoch_end(self, outputs):
+    def on_validation_epoch_end(self):
         logs = {"epoch": self.trainer.current_epoch}
-
-        avg_val_iou = find_average(outputs, "val_iou")
-
-        logs["val_iou"] = avg_val_iou
-
-        return {"val_iou": avg_val_iou, "log": logs}
+        return {"log": logs}
 
 
 def main():
@@ -171,7 +166,7 @@ def main():
     trainer = object_from_dict(
         hparams["trainer"],
         logger=WandbLogger(hparams["experiment_name"]),
-        checkpoint_callback=object_from_dict(hparams["checkpoint_callback"]),
+        callbacks=object_from_dict(hparams["checkpoint_callback"]),
     )
 
     trainer.fit(pipeline)

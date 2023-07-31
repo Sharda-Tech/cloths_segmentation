@@ -14,10 +14,10 @@ model:
 
 trainer:
   type: pytorch_lightning.Trainer
-  gpus: 1
+  accelerator: gpu
+  devices : 1
   max_epochs: 70
-  strategy: ddp
-  progress_bar_refresh_rate: 1
+  strategy: ddp_find_unused_parameters_true
   benchmark: True
   precision: 16
   gradient_clip_val: 5.0
@@ -32,7 +32,7 @@ scheduler:
   T_mult: 2
 
 train_parameters:
-  batch_size: 8
+  batch_size: 32
 
 checkpoint_callback:
   type: pytorch_lightning.callbacks.ModelCheckpoint
